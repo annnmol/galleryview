@@ -19,24 +19,21 @@ const LibraryScreen = () => {
     if (!AVAIABLE_MEDIA_TYPES.includes(id ?? "")) {
       navigate("/");
     }
-    if (id) { 
-      setFilteredData(
-        filesData.filter((file) => file.type === id) ?? []
-      );
+    if (id) {
+      setFilteredData(filesData.filter((file) => file.type === id) ?? []);
     }
-  }, [id, navigate, filesData]);
+  }, [id, filesData]); // eslint-disable-line
 
   return (
     <LayoutWrapper className="">
       <div className="flex justify-between align-middle w-full space-y-1">
         <div>
-
-        <h2 className="text-2xl font-semibold tracking-tight">
-          {id?.toUpperCase()}S for You
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Your personal playlists {id}. Updated daily.
-        </p>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {id?.toUpperCase()}S for You
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Your personal playlists {id}. Updated daily.
+          </p>
         </div>
 
         <FileInput />

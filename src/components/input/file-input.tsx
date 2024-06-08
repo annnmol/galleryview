@@ -51,7 +51,7 @@ const FileInput = () => {
       formData.append("source", file);
 
       const newFile: IMedia = {
-        id: filesData.length + 1,
+        id: filesData.length + 1 + Math.random(),
         title: file.name,
         type: id ?? "image",
         url: URL.createObjectURL(file),
