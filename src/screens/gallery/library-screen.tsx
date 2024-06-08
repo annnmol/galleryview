@@ -19,7 +19,6 @@ const LibraryScreen = () => {
     if (!AVAIABLE_MEDIA_TYPES.includes(id ?? "")) {
       navigate("/");
     }
-
     if (id) { 
       setFilteredData(
         filesData.filter((file) => file.type === id) ?? []
