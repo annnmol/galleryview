@@ -49,7 +49,6 @@ const FileInput = () => {
     if (file) {
       const formData = new FormData();
       formData.append("source", file);
-
       const newFile: IMedia = {
         id: filesData.length + 1 + Math.random(),
         title: file.name,
@@ -59,11 +58,6 @@ const FileInput = () => {
           id === "image" ? URL.createObjectURL(file) : getCoverMedia(id ?? ""),
         createdAt: new Date(),
       };
-
-      console.log(
-        `🚀 ~ file: file-input.tsx:59 ~ onImageChange ~ newFile:`,
-        newFile
-      );
 
       setFilesData((prev) => [newFile, ...prev]);
       alert("File uploaded successfully");
