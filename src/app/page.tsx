@@ -1,95 +1,116 @@
 "use client";
 
 import React, { useState } from "react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { FileList, FileItem } from "@/components/ui/file-list";
-import { UploadDialog } from "@/components/ui/upload-dialog";
+import { Dropzone } from "@/components/ui/dropzone";
+import { ImageCard } from "@/components/ui/image-card";
+import { toast } from "sonner";
 
 // Mock data for demonstration
-const mockFiles: FileItem[] = [
+const mockImages = [
   {
     id: "1",
-    filename: "Image 1",
-    type: "image",
-    createdAt: "Sep 1, 2021",
+    title: "Mountain Landscape",
+    url: "/api/placeholder/400/300",
+    alt: "Beautiful mountain landscape"
   },
   {
-    id: "2",
-    filename: "Image 2",
-    type: "image",
-    createdAt: "Sep 1, 2021",
+    id: "2", 
+    title: "City Skyline",
+    url: "/api/placeholder/400/300",
+    alt: "Modern city skyline"
   },
   {
     id: "3",
-    filename: "Image 3",
-    type: "image",
-    createdAt: "Sep 1, 2021",
+    title: "Ocean Sunset",
+    url: "/api/placeholder/400/300", 
+    alt: "Sunset over the ocean"
   },
   {
     id: "4",
-    filename: "Document 1",
-    type: "document",
-    createdAt: "Sep 1, 2021",
+    title: "Forest Path",
+    url: "/api/placeholder/400/300",
+    alt: "Path through a green forest"
   },
   {
     id: "5",
-    filename: "Document 2",
-    type: "document",
-    createdAt: "Sep 1, 2021",
+    title: "Mountain Landscape",
+    url: "/api/placeholder/400/300",
+    alt: "Beautiful mountain landscape"
   },
   {
-    id: "6",
-    filename: "Audio 1",
-    type: "audio",
-    createdAt: "Sep 1, 2021",
+    id: "6", 
+    title: "City Skyline",
+    url: "/api/placeholder/400/300",
+    alt: "Modern city skyline"
   },
   {
     id: "7",
-    filename: "Big Buck Bunny",
-    type: "video",
-    createdAt: "Sep 1, 2021",
+    title: "Ocean Sunset",
+    url: "/api/placeholder/400/300", 
+    alt: "Sunset over the ocean"
   },
   {
     id: "8",
-    filename: "first Blender Open",
-    type: "video",
-    createdAt: "Sep 1, 2021",
-  },
-  {
-    id: "9",
-    filename: "HBO GO",
-    type: "video",
-    createdAt: "Sep 1, 2021",
-  },
+    title: "Forest Path",
+    url: "/api/placeholder/400/300",
+    alt: "Path through a green forest"
+  }
 ];
 
 export default function Home() {
-  const [files, setFiles] = useState<FileItem[]>(mockFiles);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [images, setImages] = useState(mockImages);
 
-  const handleDeleteFile = (fileId: string) => {
-    setFiles(files.filter(f => f.id !== fileId));
+  const handleFileSelect = (files: File[]) => {
+    if (files && files.length > 0) {
+      toast.success(`Selected ${files.length} file(s)`, {
+        description: `Files: ${files.map(f => f.name).join(', ')}`
+      });
+      // File processing logic will be added later
+    }
+  };
+
+  const handleDeleteImage = (id: string) => {
+    setImages(images.filter(img => img.id !== id));
+    toast.success("Image deleted successfully");
   };
 
   return (
-    <>
-      <AppLayout onUploadClick={() => setUploadDialogOpen(true)}>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">All Files</h1>
-            <p className="text-muted-foreground">
-              Manage all your uploaded files in one place
-            </p>
-          </div>
-          
-          <FileList files={files} onDeleteFile={handleDeleteFile} />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+            GalleryView
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+            Upload, organize, and showcase your images with ease
+          </p>
         </div>
-      </AppLayout>
-      
-      <UploadDialog 
-        open={uploadDialogOpen} 
-        onOpenChange={setUploadDialogOpen} 
-      />
-    </>
+
+        {/* Dropzone Section */}
+        <div className="max-w-xl mx-auto mb-12">
+          <Dropzone onFileSelect={handleFileSelect} />
+        </div>
+
+        {/* Images Grid */}
+        {images.length > 0 && (
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-lg font-semibold mb-6 text-center">Your Images</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {images.map((image) => (
+                <ImageCard
+                  key={image.id}
+                  id={image.id}
+                  title={image.title}
+                  url={image.url}
+                  alt={image.alt}
+                  onDelete={handleDeleteImage}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
