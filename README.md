@@ -1,37 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GalleryView
 
-## Getting Started
+**The right way to upload images to S3 with real-time progress tracking**
 
-First, run the development server:
+A modern file upload app that demonstrates proper AWS S3 integration using presigned URLs, featuring drag & drop functionality, progress tracking, and error handling.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+#### 🚀 Live Demo
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[View Demo](https://your-demo-url.com) <!-- Add your live URL here -->
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ How It Works
+1. **Select Files** - Drag & drop or click to select images (Max 2 files, 2MB each, images only)
+2. **Generate Presigned URL** - Server creates a secure S3 upload URL (5min expiry)
+3. **Direct Upload** - Files upload directly to S3 with progress tracking
+4. **Real-time Updates** - Progress bars and status indicators update live
+5. **Completion** - Files appear in gallery with delete functionality
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎬 Demo Video
 
-## Learn More
+<!-- Add your 1-minute demo GIF/video here -->
+![Demo Video](https://your-video-url.gif)
 
-To learn more about Next.js, take a look at the following resources:
+*1-minute walkthrough showing drag & drop upload, progress tracking, and file management*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🤝 Contributing
 
-## Deploy on Vercel
+Pull requests are welcome. 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# galleryview
+MIT © [Anmol Tanwar](https://github.com/annnmol)
