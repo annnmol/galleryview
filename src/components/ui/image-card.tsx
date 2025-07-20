@@ -30,7 +30,7 @@ export function ImageCard({
   error = false,
   isDeleting = false,
   onDelete,
-  className
+  className,
 }: ImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -45,7 +45,7 @@ export function ImageCard({
     <div className="w-full max-w-[200px] mx-auto">
       <Card
         className={cn(
-          "group relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer aspect-square",
+          "group relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer aspect-square py-0",
           uploading && "ring-2 ring-primary/20",
           error && "ring-2 ring-destructive/20",
           isDeleting && "ring-2 ring-red-300 opacity-50",
@@ -62,14 +62,18 @@ export function ImageCard({
           disabled={uploading || isDeleting}
           className={cn(
             "absolute top-1.5 right-1.5 z-10 h-6 w-6 p-0 bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-sm",
-            (isHovered && !uploading && !isDeleting) ? "opacity-100 scale-100" : "opacity-0 scale-90",
+            isHovered && !uploading && !isDeleting
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-90",
             (uploading || isDeleting) && "opacity-50 cursor-not-allowed"
           )}
         >
-          <Trash2 className={cn(
-            "h-3 w-3",
-            isDeleting ? "text-red-400 animate-pulse" : "text-red-500"
-          )} />
+          <Trash2
+            className={cn(
+              "h-3 w-3",
+              isDeleting ? "text-red-400 animate-pulse" : "text-red-500"
+            )}
+          />
         </Button>
 
         {/* Upload Progress Indicator */}
@@ -94,18 +98,20 @@ export function ImageCard({
                 className="w-full h-full object-cover"
                 onError={() => setImageError(true)}
               />
-              
+
               {/* Upload Overlay */}
               {uploading && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <div className="text-center text-white">
                     <Upload className="h-6 w-6 mx-auto mb-2 animate-pulse" />
                     <p className="text-xs font-medium">Uploading...</p>
-                    <p className="text-xs opacity-80">{Math.round(progress)}%</p>
+                    <p className="text-xs opacity-80">
+                      {Math.round(progress)}%
+                    </p>
                   </div>
                 </div>
               )}
-              
+
               {/* Error Overlay */}
               {error && !isDeleting && (
                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
@@ -132,7 +138,9 @@ export function ImageCard({
             <div className="w-full h-full bg-muted flex items-center justify-center">
               <div className="text-center">
                 <div className="w-6 h-6 bg-muted-foreground/20 rounded-lg mx-auto mb-1"></div>
-                <p className="text-xs text-muted-foreground">Image unavailable</p>
+                <p className="text-xs text-muted-foreground">
+                  Image unavailable
+                </p>
               </div>
             </div>
           )}
@@ -141,10 +149,7 @@ export function ImageCard({
         {/* Progress Bar */}
         {uploading && (
           <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-            <Progress 
-              value={progress} 
-              className="h-1.5 bg-white/20"
-            />
+            <Progress value={progress} className="h-1.5 bg-white/20" />
           </div>
         )}
 

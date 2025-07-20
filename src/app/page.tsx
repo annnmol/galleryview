@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useDropzone, FileRejection } from "react-dropzone";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { ImageCard } from "@/components/ui/image-card";
+import { UploadProgressPopup } from "@/components/ui/upload-progress-popup";
 import { toast } from "sonner";
 
-type FileObj = {
+export type FileObj = {
   id: string;
   file: File;
   uploading: boolean;
@@ -19,6 +20,7 @@ type FileObj = {
 };
 export default function Home() {
   const [files, setFiles] = useState<Array<FileObj>>([]);
+  const [showUploadPopup, setShowUploadPopup] = useState(true);
 
   const uploadFile = async (fileObj: FileObj) => {
     try {
@@ -26,6 +28,7 @@ export default function Home() {
         console.error("File not found for upload:");
         return;
       }
+      setShowUploadPopup((prev) => !prev ? true : prev);
 
       const { file } = fileObj;
 
@@ -61,7 +64,7 @@ export default function Home() {
         return;
       }
 
-      // Step 2: Upload file to S3 using presigned URL 
+      // Step 2: Upload file to S3 using presigned URL
       await axios.put(presignedUrl, file, {
         headers: {
           "Content-Type": file.type,
@@ -123,7 +126,7 @@ export default function Home() {
       }));
 
       setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-      toast.success(`${newFiles.length} file(s) added successfully!`);
+
       newFiles.forEach((fileObj) => {
         uploadFile(fileObj);
       });
@@ -134,6 +137,10 @@ export default function Home() {
     console.log(`🚀 ~ rejectedFiles ~ fileRejection:`, fileRejection);
 
     if (fileRejection.length) {
+      const invalidFileType = fileRejection.find(
+        (rejection) => rejection.errors[0].code === "file-invalid-type"
+      );
+
       const toomanyFiles = fileRejection.find(
         (rejection) => rejection.errors[0].code === "too-many-files"
       );
@@ -143,11 +150,17 @@ export default function Home() {
       );
 
       if (toomanyFiles) {
-        toast.error("Too many files selected, max is 2");
+        return toast.error("Too many files selected, max is 2");
+      }
+
+      if (invalidFileType) {
+        return toast.error(
+          `Only images are allowed.`
+        );
       }
 
       if (fileSizetoBig) {
-        toast.error("File size exceeds 5mb limit");
+        return toast.error("File size exceeds 5mb limit");
       }
     }
   }, []);
@@ -183,16 +196,14 @@ export default function Home() {
 
       // Set deleting state
       setFiles((prevFiles) =>
-        prevFiles.map((f) =>
-          f.id === id ? { ...f, isDeleting: true } : f
-        )
+        prevFiles.map((f) => (f.id === id ? { ...f, isDeleting: true } : f))
       );
 
       // Only delete from S3 if file has been uploaded (has key)
       if (fileToDelete.key) {
         // Call delete API to remove from S3
         await axios.delete("/api/s3/delete", {
-          data: { key: fileToDelete.key }
+          data: { key: fileToDelete.key },
         });
       }
 
@@ -203,20 +214,18 @@ export default function Home() {
 
       // Remove from local state
       setFiles((prevFiles) => prevFiles.filter((f) => f.id !== id));
-      
-      toast.success("File deleted successfully");
 
+      toast.success("File deleted successfully");
     } catch (error: any) {
       console.error("Delete failed:", error);
-      
+
       // Reset deleting state on error
       setFiles((prevFiles) =>
-        prevFiles.map((f) =>
-          f.id === id ? { ...f, isDeleting: false } : f
-        )
+        prevFiles.map((f) => (f.id === id ? { ...f, isDeleting: false } : f))
       );
 
-      const errorMessage = error.response?.data?.error || error.message || "Delete failed";
+      const errorMessage =
+        error.response?.data?.error || error.message || "Delete failed";
       toast.error(`Delete failed: ${errorMessage}`);
     }
   };
@@ -230,8 +239,7 @@ export default function Home() {
             GalleryView
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            {/* Upload, organize, and showcase your images with ease */}
-            Right way to upload files on bucket
+            The right way to upload files on bucket
           </p>
         </div>
 
@@ -291,6 +299,14 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Upload Progress Popup */}
+      {showUploadPopup && (
+        <UploadProgressPopup
+          files={files}
+          onClose={() => setShowUploadPopup(false)}
+        />
+      )}
     </div>
   );
 }
