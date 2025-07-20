@@ -20,30 +20,58 @@ export default function Home() {
     }>
   >([]);
 
-  const uploadFile = (file: File) => {
-    // Dummy upload function - will be implemented later
-    console.log("Uploading file:", file.name);
-    // toast.success(`Selected ${files.length} file(s)`, {
-    //   description: `Files: ${files.map((f) => f.file.name).join(", ")}`,
-    // });
+  const uploadFile = (fileId: string) => {
+    // Dummy upload function with progress simulation
+    setFiles((prevFiles) =>
+      prevFiles.map((f) =>
+        f.id === fileId ? { ...f, uploading: true, progress: 0 } : f
+      )
+    );
+
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      setFiles((prevFiles) =>
+        prevFiles.map((f) => {
+          if (f.id === fileId && f.uploading) {
+            const newProgress = f.progress + Math.random() * 20;
+            if (newProgress >= 100) {
+              clearInterval(interval);
+              return { ...f, uploading: false, progress: 100 };
+            }
+            return { ...f, progress: newProgress };
+          }
+          return f;
+        })
+      );
+    }, 200);
+
+    // Auto-complete after 3 seconds as fallback
+    setTimeout(() => {
+      clearInterval(interval);
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === fileId ? { ...f, uploading: false, progress: 100 } : f
+        )
+      );
+    }, 3000);
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length) {
-      setFiles((prevFiles) => [
-        ...prevFiles,
-        ...acceptedFiles.map((file) => ({
-          id: uuidv4(),
-          file,
-          uploading: false,
-          progress: 0,
-          isDeleting: false,
-          error: false,
-          objectUrl: URL.createObjectURL(file),
-        })),
-      ]);
+      const newFiles = acceptedFiles.map((file) => ({
+        id: uuidv4(),
+        file,
+        uploading: false,
+        progress: 0,
+        isDeleting: false,
+        error: false,
+        objectUrl: URL.createObjectURL(file),
+      }));
 
-      acceptedFiles.forEach(uploadFile);
+      setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+
+      // Start upload for each new file
+      newFiles.forEach((fileObj) => uploadFile(fileObj.id));
     }
   }, []);
 
@@ -137,7 +165,7 @@ export default function Home() {
                     Drag & drop files here, or click to select
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Max 5 files, 10MB each. Images only.
+                    Max 2 files, 2MB each. Images only.
                   </p>
                 </div>
               )}
@@ -159,6 +187,9 @@ export default function Home() {
                   title={file.file.name}
                   url={file.objectUrl || ""}
                   alt={file.file.name}
+                  uploading={file.uploading}
+                  progress={file.progress}
+                  error={file.error}
                   onDelete={handleDeleteFile}
                 />
               ))}

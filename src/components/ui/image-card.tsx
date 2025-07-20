@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImageCardProps {
@@ -11,6 +12,9 @@ interface ImageCardProps {
   title: string;
   url: string;
   alt: string;
+  uploading?: boolean;
+  progress?: number;
+  error?: boolean;
   onDelete?: (id: string) => void;
   className?: string;
 }
@@ -20,6 +24,9 @@ export function ImageCard({
   title,
   url,
   alt,
+  uploading = false,
+  progress = 0,
+  error = false,
   onDelete,
   className
 }: ImageCardProps) {
@@ -36,7 +43,9 @@ export function ImageCard({
     <div className="w-full max-w-[200px] mx-auto">
       <Card
         className={cn(
-          "group relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer bg-gradient-to-br from-slate-50 to-slate-100 aspect-square",
+          "group relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer aspect-square",
+          uploading && "ring-2 ring-primary/20",
+          error && "ring-2 ring-destructive/20",
           className
         )}
         onMouseEnter={() => setIsHovered(true)}
@@ -47,32 +56,61 @@ export function ImageCard({
           variant="ghost"
           size="sm"
           onClick={handleDelete}
+          disabled={uploading}
           className={cn(
             "absolute top-1.5 right-1.5 z-10 h-6 w-6 p-0 bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-sm",
-            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90"
+            (isHovered && !uploading) ? "opacity-100 scale-100" : "opacity-0 scale-90",
+            uploading && "opacity-50 cursor-not-allowed"
           )}
         >
           <Trash2 className="h-3 w-3 text-red-500" />
         </Button>
 
+        {/* Upload Progress Indicator */}
+        {uploading && (
+          <div className="absolute top-1.5 left-1.5 z-10 h-6 w-6 bg-white/80 backdrop-blur-sm rounded-md flex items-center justify-center shadow-sm">
+            <Upload className="h-3 w-3 text-primary animate-pulse" />
+          </div>
+        )}
+
         {/* Image Container */}
         <div className="w-full h-full overflow-hidden bg-muted">
-          {!imageError ? (
+          {!imageError && url ? (
             <div
               className={cn(
-                "w-full h-full transition-transform duration-300 ease-out",
-                isHovered && "scale-105"
+                "w-full h-full transition-transform duration-300 ease-out relative",
+                isHovered && !uploading && "scale-105"
               )}
             >
-              {/* Placeholder since we don't have real images */}
-              <div className="w-full h-full bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-white/80 rounded-lg mx-auto mb-2 flex items-center justify-center shadow-sm">
-                    <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-500 rounded-sm"></div>
+              <img
+                src={url}
+                alt={alt}
+                className="w-full h-full object-cover"
+                onError={() => setImageError(true)}
+              />
+              
+              {/* Upload Overlay */}
+              {uploading && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <Upload className="h-6 w-6 mx-auto mb-2 animate-pulse" />
+                    <p className="text-xs font-medium">Uploading...</p>
+                    <p className="text-xs opacity-80">{Math.round(progress)}%</p>
                   </div>
-                  <p className="text-xs font-medium text-slate-600 px-2 line-clamp-2">{title}</p>
                 </div>
-              </div>
+              )}
+              
+              {/* Error Overlay */}
+              {error && (
+                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                  <div className="text-center text-red-600">
+                    <div className="w-6 h-6 bg-red-100 rounded-full mx-auto mb-1 flex items-center justify-center">
+                      <span className="text-xs">!</span>
+                    </div>
+                    <p className="text-xs font-medium">Upload Failed</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -84,16 +122,28 @@ export function ImageCard({
           )}
         </div>
 
+        {/* Progress Bar */}
+        {uploading && (
+          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
+            <Progress 
+              value={progress} 
+              className="h-1.5 bg-white/20"
+            />
+          </div>
+        )}
+
         {/* Title Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-2">
-          <h3 className="text-white font-medium text-xs truncate">{title}</h3>
-        </div>
+        {!uploading && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-2">
+            <h3 className="text-white font-medium text-xs truncate">{title}</h3>
+          </div>
+        )}
 
         {/* Hover Overlay */}
         <div
           className={cn(
-            "absolute inset-0 bg-black/0 transition-all duration-300",
-            isHovered && "bg-black/5"
+            "absolute inset-0 bg-black/0 transition-all duration-300 pointer-events-none",
+            isHovered && !uploading && "bg-black/5"
           )}
         />
       </Card>
