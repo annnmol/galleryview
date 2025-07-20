@@ -47,7 +47,7 @@ export default function Home() {
 
       const { presignedUrl, key } = presignedResponse.data;
 
-      console.log(`🚀 ~ uploadFile ~ presignedUrl, key:`, presignedUrl, key);
+      // console.log(`🚀 ~ uploadFile ~ presignedUrl, key:`, presignedUrl, key);
 
       if (!presignedUrl || !key) {
         setFiles((prevFiles) =>
@@ -61,7 +61,7 @@ export default function Home() {
         return;
       }
 
-      // Step 2: Upload file to S3 using presigned URL with progress tracking
+      // Step 2: Upload file to S3 using presigned URL 
       await axios.put(presignedUrl, file, {
         headers: {
           "Content-Type": file.type,
@@ -173,13 +173,52 @@ export default function Home() {
     };
   }, [files]);
 
-  const handleDeleteFile = (id: string) => {
-    const fileToDelete = files.find((f) => f.id === id);
-    if (fileToDelete?.objectUrl) {
-      URL.revokeObjectURL(fileToDelete.objectUrl);
+  const handleDeleteFile = async (id: string) => {
+    try {
+      const fileToDelete = files.find((f) => f.id === id);
+      if (!fileToDelete) {
+        toast.error("File not found");
+        return;
+      }
+
+      // Set deleting state
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === id ? { ...f, isDeleting: true } : f
+        )
+      );
+
+      // Only delete from S3 if file has been uploaded (has key)
+      if (fileToDelete.key) {
+        // Call delete API to remove from S3
+        await axios.delete("/api/s3/delete", {
+          data: { key: fileToDelete.key }
+        });
+      }
+
+      // Clean up object URL
+      if (fileToDelete.objectUrl) {
+        URL.revokeObjectURL(fileToDelete.objectUrl);
+      }
+
+      // Remove from local state
+      setFiles((prevFiles) => prevFiles.filter((f) => f.id !== id));
+      
+      toast.success("File deleted successfully");
+
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      
+      // Reset deleting state on error
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === id ? { ...f, isDeleting: false } : f
+        )
+      );
+
+      const errorMessage = error.response?.data?.error || error.message || "Delete failed";
+      toast.error(`Delete failed: ${errorMessage}`);
     }
-    setFiles(files.filter((f) => f.id !== id));
-    toast.success("File deleted successfully");
   };
 
   return (
@@ -244,6 +283,7 @@ export default function Home() {
                   uploading={file.uploading}
                   progress={file.progress}
                   error={file.error}
+                  isDeleting={file.isDeleting}
                   onDelete={handleDeleteFile}
                 />
               ))}

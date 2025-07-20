@@ -15,6 +15,7 @@ interface ImageCardProps {
   uploading?: boolean;
   progress?: number;
   error?: boolean;
+  isDeleting?: boolean;
   onDelete?: (id: string) => void;
   className?: string;
 }
@@ -27,6 +28,7 @@ export function ImageCard({
   uploading = false,
   progress = 0,
   error = false,
+  isDeleting = false,
   onDelete,
   className
 }: ImageCardProps) {
@@ -34,7 +36,7 @@ export function ImageCard({
   const [imageError, setImageError] = useState(false);
 
   const handleDelete = () => {
-    if (onDelete) {
+    if (onDelete && !isDeleting && !uploading) {
       onDelete(id);
     }
   };
@@ -46,6 +48,7 @@ export function ImageCard({
           "group relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer aspect-square",
           uploading && "ring-2 ring-primary/20",
           error && "ring-2 ring-destructive/20",
+          isDeleting && "ring-2 ring-red-300 opacity-50",
           className
         )}
         onMouseEnter={() => setIsHovered(true)}
@@ -56,14 +59,17 @@ export function ImageCard({
           variant="ghost"
           size="sm"
           onClick={handleDelete}
-          disabled={uploading}
+          disabled={uploading || isDeleting}
           className={cn(
             "absolute top-1.5 right-1.5 z-10 h-6 w-6 p-0 bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-sm",
-            (isHovered && !uploading) ? "opacity-100 scale-100" : "opacity-0 scale-90",
-            uploading && "opacity-50 cursor-not-allowed"
+            (isHovered && !uploading && !isDeleting) ? "opacity-100 scale-100" : "opacity-0 scale-90",
+            (uploading || isDeleting) && "opacity-50 cursor-not-allowed"
           )}
         >
-          <Trash2 className="h-3 w-3 text-red-500" />
+          <Trash2 className={cn(
+            "h-3 w-3",
+            isDeleting ? "text-red-400 animate-pulse" : "text-red-500"
+          )} />
         </Button>
 
         {/* Upload Progress Indicator */}
@@ -101,13 +107,23 @@ export function ImageCard({
               )}
               
               {/* Error Overlay */}
-              {error && (
+              {error && !isDeleting && (
                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
                   <div className="text-center text-red-600">
                     <div className="w-6 h-6 bg-red-100 rounded-full mx-auto mb-1 flex items-center justify-center">
                       <span className="text-xs">!</span>
                     </div>
                     <p className="text-xs font-medium">Upload Failed</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Overlay */}
+              {isDeleting && (
+                <div className="absolute inset-0 bg-red-500/30 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <Trash2 className="h-6 w-6 mx-auto mb-2 animate-pulse" />
+                    <p className="text-xs font-medium">Deleting...</p>
                   </div>
                 </div>
               )}
