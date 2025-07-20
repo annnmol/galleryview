@@ -16,6 +16,9 @@
 <!-- Add your 1-minute demo GIF/video here -->
 ![Demo Video](https://github.com/user-attachments/assets/8c00f716-b5c4-4c99-aef9-bdd2400ad8a6)
 
+[![Watch the video](https://img.youtube.com/vi/elwBHyU0Y5o/hqdefault.jpg)](https://www.youtube.com/watch?v=elwBHyU0Y5o)
+
+
 *1-minute walkthrough showing drag & drop upload, progress tracking, and file upload*
 
 
