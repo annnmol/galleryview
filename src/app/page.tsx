@@ -1,77 +1,103 @@
 "use client";
 
-import React, { useState } from "react";
-import { Dropzone } from "@/components/ui/dropzone";
+import React, { useState, useCallback, useEffect } from "react";
+import { useDropzone, FileRejection } from "react-dropzone";
+import { v4 as uuidv4 } from "uuid";
 import { ImageCard } from "@/components/ui/image-card";
 import { toast } from "sonner";
 
-// Mock data for demonstration
-const mockImages = [
-  {
-    id: "1",
-    title: "Mountain Landscape",
-    url: "/api/placeholder/400/300",
-    alt: "Beautiful mountain landscape"
-  },
-  {
-    id: "2", 
-    title: "City Skyline",
-    url: "/api/placeholder/400/300",
-    alt: "Modern city skyline"
-  },
-  {
-    id: "3",
-    title: "Ocean Sunset",
-    url: "/api/placeholder/400/300", 
-    alt: "Sunset over the ocean"
-  },
-  {
-    id: "4",
-    title: "Forest Path",
-    url: "/api/placeholder/400/300",
-    alt: "Path through a green forest"
-  },
-  {
-    id: "5",
-    title: "Mountain Landscape",
-    url: "/api/placeholder/400/300",
-    alt: "Beautiful mountain landscape"
-  },
-  {
-    id: "6", 
-    title: "City Skyline",
-    url: "/api/placeholder/400/300",
-    alt: "Modern city skyline"
-  },
-  {
-    id: "7",
-    title: "Ocean Sunset",
-    url: "/api/placeholder/400/300", 
-    alt: "Sunset over the ocean"
-  },
-  {
-    id: "8",
-    title: "Forest Path",
-    url: "/api/placeholder/400/300",
-    alt: "Path through a green forest"
-  }
-];
-
 export default function Home() {
-  const [images, setImages] = useState(mockImages);
+  const [files, setFiles] = useState<
+    Array<{
+      id: string;
+      file: File;
+      uploading: boolean;
+      progress: number;
+      key?: string;
+      isDeleting: boolean;
+      error: boolean;
+      objectUrl?: string;
+    }>
+  >([]);
 
-  const handleFileSelect = (files: File[]) => {
-    if (files && files.length > 0) {
-      toast.success(`Selected ${files.length} file(s)`, {
-        description: `Files: ${files.map(f => f.name).join(', ')}`
-      });
-      // File processing logic will be added later
-    }
+  const uploadFile = (file: File) => {
+    // Dummy upload function - will be implemented later
+    console.log("Uploading file:", file.name);
+    // toast.success(`Selected ${files.length} file(s)`, {
+    //   description: `Files: ${files.map((f) => f.file.name).join(", ")}`,
+    // });
   };
 
-  const handleDeleteImage = (id: string) => {
-    setImages(images.filter(img => img.id !== id));
-    toast.success("Image deleted successfully");
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length) {
+      setFiles((prevFiles) => [
+        ...prevFiles,
+        ...acceptedFiles.map((file) => ({
+          id: uuidv4(),
+          file,
+          uploading: false,
+          progress: 0,
+          isDeleting: false,
+          error: false,
+          objectUrl: URL.createObjectURL(file),
+        })),
+      ]);
+
+      acceptedFiles.forEach(uploadFile);
+    }
+  }, []);
+
+  const rejectedFiles = useCallback((fileRejection: FileRejection[]) => {
+
+    console.log(`🚀 ~ rejectedFiles ~ fileRejection:`, fileRejection);
+
+    if (fileRejection.length) {
+      const toomanyFiles = fileRejection.find(
+        (rejection) => rejection.errors[0].code === "too-many-files"
+      );
+
+      const fileSizetoBig = fileRejection.find(
+        (rejection) => rejection.errors[0].code === "file-too-large"
+      );
+
+      if (toomanyFiles) {
+        toast.error("Too many files selected, max is 2");
+      }
+
+      if (fileSizetoBig) {
+        toast.error("File size exceeds 5mb limit");
+      }
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    onDropRejected: rejectedFiles,
+    maxFiles: 2,
+    maxSize: 1024 * 1024 * 2, // 2mb
+    accept: {
+      "image/*": [],
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      // Cleanup object URLs when component unmounts
+      files.forEach((file) => {
+        if (file.objectUrl) {
+          URL.revokeObjectURL(file.objectUrl);
+        }
+      });
+    };
+  }, [files]);
+
+  const handleDeleteFile = (id: string) => {
+    const fileToDelete = files.find((f) => f.id === id);
+    if (fileToDelete?.objectUrl) {
+      URL.revokeObjectURL(fileToDelete.objectUrl);
+    }
+    setFiles(files.filter((f) => f.id !== id));
+    toast.success("File deleted successfully");
   };
 
   return (
@@ -83,28 +109,57 @@ export default function Home() {
             GalleryView
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Upload, organize, and showcase your images with ease
+            {/* Upload, organize, and showcase your images with ease */}
+            Right way to upload files on bucket
           </p>
         </div>
 
         {/* Dropzone Section */}
         <div className="max-w-xl mx-auto mb-12">
-          <Dropzone onFileSelect={handleFileSelect} />
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+              isDragActive
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-2xl">📁</div>
+              {isDragActive ? (
+                <p className="text-sm text-muted-foreground">
+                  Drop the files here...
+                </p>
+              ) : (
+                <div>
+                  <p className="text-sm font-medium">
+                    Drag & drop files here, or click to select
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Max 5 files, 10MB each. Images only.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Images Grid */}
-        {images.length > 0 && (
+        {/* Files Grid */}
+        {files.length > 0 && (
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-lg font-semibold mb-6 text-center">Your Images</h2>
+            <h2 className="text-lg font-semibold mb-6 text-center">
+              Your Files
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {images.map((image) => (
+              {files.map((file) => (
                 <ImageCard
-                  key={image.id}
-                  id={image.id}
-                  title={image.title}
-                  url={image.url}
-                  alt={image.alt}
-                  onDelete={handleDeleteImage}
+                  key={file.id}
+                  id={file.id}
+                  title={file.file.name}
+                  url={file.objectUrl || ""}
+                  alt={file.file.name}
+                  onDelete={handleDeleteFile}
                 />
               ))}
             </div>
