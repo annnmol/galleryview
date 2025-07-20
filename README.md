@@ -2,11 +2,7 @@
 
 **The right way to upload images to S3 with real-time progress tracking**
 
-A modern file upload app that demonstrates proper AWS S3 integration using presigned URLs, featuring drag & drop functionality, progress tracking, and error handling.
-
-#### 🚀 Live Demo
-
-[View Demo](https://your-demo-url.com) <!-- Add your live URL here -->
+#### 🚀 [View Demo](https://galleryview.vercel.app/)
 
 ## ✨ How It Works
 1. **Select Files** - Drag & drop or click to select images (Max 2 files, 2MB each, images only)
@@ -20,7 +16,7 @@ A modern file upload app that demonstrates proper AWS S3 integration using presi
 <!-- Add your 1-minute demo GIF/video here -->
 ![Demo Video](https://your-video-url.gif)
 
-*1-minute walkthrough showing drag & drop upload, progress tracking, and file management*
+*1-minute walkthrough showing drag & drop upload, progress tracking, and file upload*
 
 
 ## 🤝 Contributing
