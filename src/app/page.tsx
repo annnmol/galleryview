@@ -3,57 +3,111 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone, FileRejection } from "react-dropzone";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 import { ImageCard } from "@/components/ui/image-card";
 import { toast } from "sonner";
 
+type FileObj = {
+  id: string;
+  file: File;
+  uploading: boolean;
+  progress: number;
+  key?: string;
+  isDeleting: boolean;
+  error: boolean;
+  objectUrl?: string;
+};
 export default function Home() {
-  const [files, setFiles] = useState<
-    Array<{
-      id: string;
-      file: File;
-      uploading: boolean;
-      progress: number;
-      key?: string;
-      isDeleting: boolean;
-      error: boolean;
-      objectUrl?: string;
-    }>
-  >([]);
+  const [files, setFiles] = useState<Array<FileObj>>([]);
 
-  const uploadFile = (fileId: string) => {
-    // Dummy upload function with progress simulation
-    setFiles((prevFiles) =>
-      prevFiles.map((f) =>
-        f.id === fileId ? { ...f, uploading: true, progress: 0 } : f
-      )
-    );
+  const uploadFile = async (fileObj: FileObj) => {
+    try {
+      if (!fileObj) {
+        console.error("File not found for upload:");
+        return;
+      }
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setFiles((prevFiles) =>
-        prevFiles.map((f) => {
-          if (f.id === fileId && f.uploading) {
-            const newProgress = f.progress + Math.random() * 20;
-            if (newProgress >= 100) {
-              clearInterval(interval);
-              return { ...f, uploading: false, progress: 100 };
-            }
-            return { ...f, progress: newProgress };
-          }
-          return f;
-        })
-      );
-    }, 200);
+      const { file } = fileObj;
 
-    // Auto-complete after 3 seconds as fallback
-    setTimeout(() => {
-      clearInterval(interval);
+      // Set uploading state
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
-          f.id === fileId ? { ...f, uploading: false, progress: 100 } : f
+          f.id === fileObj.id
+            ? { ...f, uploading: true, progress: 0, error: false }
+            : f
         )
       );
-    }, 3000);
+
+      // Step 1: Get presigned URL from our API
+      const presignedResponse = await axios.post("/api/s3/upload", {
+        filename: file.name,
+        contentType: file.type,
+        size: file.size,
+      });
+
+      const { presignedUrl, key } = presignedResponse.data;
+
+      console.log(`🚀 ~ uploadFile ~ presignedUrl, key:`, presignedUrl, key);
+
+      if (!presignedUrl || !key) {
+        setFiles((prevFiles) =>
+          prevFiles.map((f) =>
+            f.id === fileObj.id
+              ? { ...f, uploading: false, error: true, progress: 0 }
+              : f
+          )
+        );
+        toast.error(`Invalid response from presigned URL API`);
+        return;
+      }
+
+      // Step 2: Upload file to S3 using presigned URL with progress tracking
+      await axios.put(presignedUrl, file, {
+        headers: {
+          "Content-Type": file.type,
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+
+            setFiles((prevFiles) =>
+              prevFiles.map((f) =>
+                f.id === fileObj.id ? { ...f, progress } : f
+              )
+            );
+          }
+        },
+      });
+
+      // Step 3: Mark upload as complete and store the S3 key
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === fileObj.id
+            ? { ...f, uploading: false, progress: 100, key, error: false }
+            : f
+        )
+      );
+
+      toast.success(`${file.name} uploaded successfully!`);
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+
+      // Mark upload as failed
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === fileObj.id
+            ? { ...f, uploading: false, error: true, progress: 0 }
+            : f
+        )
+      );
+
+      // Show error message
+      const errorMessage =
+        error.response?.data?.error || error.message || "Upload failed";
+      toast.error(`Upload failed: ${errorMessage}`);
+    }
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -69,14 +123,14 @@ export default function Home() {
       }));
 
       setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-
-      // Start upload for each new file
-      newFiles.forEach((fileObj) => uploadFile(fileObj.id));
+      toast.success(`${newFiles.length} file(s) added successfully!`);
+      newFiles.forEach((fileObj) => {
+        uploadFile(fileObj);
+      });
     }
   }, []);
 
   const rejectedFiles = useCallback((fileRejection: FileRejection[]) => {
-
     console.log(`🚀 ~ rejectedFiles ~ fileRejection:`, fileRejection);
 
     if (fileRejection.length) {
