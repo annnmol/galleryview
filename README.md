@@ -14,7 +14,7 @@
 ## 🎬 Demo Video
 
 <!-- Add your 1-minute demo GIF/video here -->
-![Demo Video](https://your-video-url.gif)
+![Demo Video](https://github.com/user-attachments/assets/8c00f716-b5c4-4c99-aef9-bdd2400ad8a6)
 
 *1-minute walkthrough showing drag & drop upload, progress tracking, and file upload*
 
