@@ -18,7 +18,6 @@
 
 *1-minute walkthrough showing drag & drop upload, progress tracking, and file upload*
 
-
 ## 🤝 Contributing
 
 Pull requests are welcome. 
